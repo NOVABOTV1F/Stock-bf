@@ -1,0 +1,16 @@
+{
+  "updatedAt": "2026-11-01T11:00:00+07:00",
+  "normal": {
+    "resetAt": "2026-11-01T11:00:00+07:00",
+    "items": [
+      { "name": "Contoh Fruit 1", "price": 5000, "emoji": "🍎" },
+      { "name": "Contoh Fruit 2", "price": 7500, "emoji": "🍊" }
+    ]
+  },
+  "mirage": {
+    "resetAt": "2026-11-01T12:00:00+07:00",
+    "items": [
+      { "name": "Contoh Fruit 3", "price": 250000, "emoji": "🍇" }
+    ]
+  }
+}

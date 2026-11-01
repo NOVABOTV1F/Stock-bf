@@ -1,0 +1,2166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐍 Snake Arena - Realistic Battle</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === LOGIN SCREEN === */
+        #loginScreen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #0a0a0a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s;
+        }
+
+        #loginScreen h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            color: #00ff88;
+            text-shadow: 0 0 30px #00ff88, 0 0 60px #00ff44;
+            margin-bottom: 10px;
+            animation: glowPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { text-shadow: 0 0 30px #00ff88, 0 0 60px #00ff44; }
+            50% { text-shadow: 0 0 50px #00ff88, 0 0 100px #00ff44; }
+        }
+
+        #loginScreen .subtitle {
+            color: #888;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            letter-spacing: 3px;
+        }
+
+        .login-input {
+            width: 320px;
+            padding: 15px 25px;
+            font-size: 1.3rem;
+            font-family: 'Rajdhani', sans-serif;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .login-input:focus {
+            box-shadow: 0 0 20px rgba(0,255,136,0.3);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .btn {
+            padding: 15px 50px;
+            font-size: 1.2rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0,255,136,0.4);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(0,255,136,0.6);
+        }
+
+        /* === MAIN GAME UI === */
+        #gameUI {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Top Bar */
+        #topBar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: linear-gradient(90deg, #0f0f0f, #1a1a2e, #0f0f0f);
+            border-bottom: 2px solid #00ff88;
+            height: 60px;
+        }
+
+        #topBar .playerInfo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #topBar .playerAvatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #00ff88;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        #topBar .stats {
+            display: flex;
+            gap: 25px;
+            font-size: 1.1rem;
+        }
+
+        .stat-box {
+            background: rgba(0,255,136,0.1);
+            padding: 5px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,255,136,0.3);
+        }
+
+        .stat-box span {
+            color: #00ff88;
+            font-weight: 700;
+        }
+
+        /* Main Area */
+        #mainArea {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Panel - Leaderboard */
+        #leftPanel {
+            width: 220px;
+            background: #0f0f0f;
+            border-right: 1px solid #333;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        #leftPanel h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: #ffaa00;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .leaderboard-item.active {
+            border-color: #00ff88;
+            background: rgba(0,255,136,0.1);
+        }
+
+        .leaderboard-item .rank {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .rank-1 { background: gold; color: #000; }
+        .rank-2 { background: silver; color: #000; }
+        .rank-3 { background: #cd7f32; color: #000; }
+        .rank-other { background: #333; color: #888; }
+
+        .leaderboard-item .snake-icon {
+            font-size: 1.2rem;
+        }
+
+        .leaderboard-item .score {
+            margin-left: auto;
+            color: #00ff88;
+            font-weight: 700;
+        }
+
+        /* Center - Game Canvas */
+        #gameContainer {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #050505;
+            position: relative;
+        }
+
+        #gameCanvas {
+            border: 2px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0,255,136,0.1);
+        }
+
+        /* Right Panel - Shop & Skills */
+        #rightPanel {
+            width: 280px;
+            background: #0f0f0f;
+            border-left: 1px solid #333;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel-section {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid #222;
+        }
+
+        .panel-section h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: #00ff88;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .coin-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            color: #ffaa00;
+            font-weight: 700;
+        }
+
+        .coin-display span {
+            font-size: 1.8rem;
+        }
+
+        /* Snake Shop */
+        .snake-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #333;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .snake-card:hover {
+            border-color: #00ff88;
+            background: rgba(0,255,136,0.05);
+        }
+
+        .snake-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .snake-card.owned {
+            border-color: #00ff88;
+            background: rgba(0,255,136,0.1);
+        }
+
+        .snake-card.selected {
+            border-color: #ffaa00;
+            box-shadow: 0 0 15px rgba(255,170,0,0.3);
+        }
+
+        .snake-card .snake-preview {
+            font-size: 2rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .snake-card .snake-info {
+            flex: 1;
+        }
+
+        .snake-card .snake-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .snake-card .snake-skill {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .snake-card .snake-price {
+            color: #ffaa00;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .snake-card .owned-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #00ff88;
+            color: #000;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        /* Skill Bar */
+        #skillBar {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            padding: 10px;
+            background: #0a0a0a;
+            border-top: 1px solid #333;
+        }
+
+        .skill-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            border: 2px solid #444;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .skill-btn:hover:not(.cooldown) {
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0,255,136,0.3);
+        }
+
+        .skill-btn.cooldown {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .skill-btn .cd-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255,0,0,0.6);
+            border-radius: 0 0 10px 10px;
+            transition: height 0.1s linear;
+        }
+
+        .skill-btn .key-hint {
+            position: absolute;
+            top: 2px;
+            right: 5px;
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        /* Settings Modal */
+        #settingsModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            min-width: 400px;
+            max-width: 500px;
+        }
+
+        .modal-content h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: #00ff88;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .setting-row label {
+            font-size: 1rem;
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 26px;
+            background: #333;
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #00ff88;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 26px;
+        }
+
+        /* Game Over Screen */
+        #gameOverScreen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10001;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #gameOverScreen h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            color: #ff4444;
+            text-shadow: 0 0 30px #ff4444;
+            margin-bottom: 20px;
+        }
+
+        .final-stats {
+            background: rgba(255,255,255,0.05);
+            padding: 20px 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .final-stats .big-number {
+            font-size: 3rem;
+            color: #00ff88;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Minimap */
+        #minimap {
+            width: 150px;
+            height: 150px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #050505;
+            margin-top: 10px;
+        }
+
+        /* Kill Feed */
+        #killFeed {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            max-width: 250px;
+        }
+
+        .kill-msg {
+            background: rgba(255,0,0,0.2);
+            border-left: 3px solid #ff4444;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.85rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,255,136,0.9);
+            color: #000;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            z-index: 10002;
+            animation: notifSlide 0.5s ease, notifFade 0.5s ease 2.5s forwards;
+        }
+
+        @keyframes notifSlide {
+            from { transform: translateX(-50%) translateY(-50px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        @keyframes notifFade {
+            to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00ff88;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            #leftPanel { width: 180px; }
+            #rightPanel { width: 240px; }
+        }
+
+        /* Particle effects */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            animation: particleFade 1s ease forwards;
+        }
+
+        @keyframes particleFade {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        /* Speed indicator */
+        .speed-indicator {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen">
+        <h1>🐍 SNAKE ARENA</h1>
+        <p class="subtitle">BATTLE ROYALE EDITION</p>
+        <input type="text" id="playerName" class="login-input" placeholder="Masukkan Nama Pemain..." maxlength="15" value="LO">
+        <button class="btn btn-primary" onclick="startGame()">MULAI PERMAINAN</button>
+    </div>
+
+    <!-- GAME UI -->
+    <div id="gameUI">
+        <!-- Top Bar -->
+        <div id="topBar">
+            <div class="playerInfo">
+                <div class="playerAvatar" id="playerAvatar">🐍</div>
+                <div>
+                    <div id="displayName" style="font-weight:700; color:#00ff88;">LO</div>
+                    <div style="font-size:0.8rem; color:#888;">Rank #<span id="playerRank">1</span></div>
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat-box">Score: <span id="scoreDisplay">0</span></div>
+                <div class="stat-box">Panjang: <span id="lengthDisplay">3</span></div>
+                <div class="stat-box">Kill: <span id="killDisplay">0</span></div>
+                <div class="stat-box">Waktu: <span id="timeDisplay">0:00</span></div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary" style="padding:8px 20px; font-size:0.9rem;" onclick="toggleSettings()">⚙️ Setting</button>
+                <button class="btn btn-primary" style="padding:8px 20px; font-size:0.9rem; background:linear-gradient(135deg,#ff4444,#cc0000);" onclick="quitGame()">🚪 Keluar</button>
+            </div>
+        </div>
+
+        <!-- Main Area -->
+        <div id="mainArea">
+            <!-- Left Panel - Leaderboard -->
+            <div id="leftPanel">
+                <h3>🏆 LEADERBOARD</h3>
+                <div id="leaderboardList"></div>
+                <canvas id="minimap"></canvas>
+            </div>
+
+            <!-- Center - Game -->
+            <div id="gameContainer">
+                <canvas id="gameCanvas" width="800" height="600"></canvas>
+                <div id="killFeed"></div>
+                <div class="speed-indicator">Speed: <span id="speedIndicator">Normal</span></div>
+            </div>
+
+            <!-- Right Panel - Shop & Info -->
+            <div id="rightPanel">
+                <!-- Coins -->
+                <div class="panel-section">
+                    <h3>💰 KOLEKSI KOIN</h3>
+                    <div class="coin-display">
+                        <span>🪙</span>
+                        <span id="coinDisplay">100</span>
+                    </div>
+                    <div style="font-size:0.8rem; color:#888; margin-top:5px;">1 kg = 1 Koin</div>
+                </div>
+
+                <!-- Current Snake Info -->
+                <div class="panel-section">
+                    <h3>🐍 ULAR AKTIF</h3>
+                    <div id="activeSnakeInfo" style="text-align:center;">
+                        <div style="font-size:3rem;" id="activeSnakeEmoji">🐍</div>
+                        <div style="font-weight:700;" id="activeSnakeName">Ular Hijau</div>
+                        <div style="font-size:0.85rem; color:#888;" id="activeSnakeSkill">Skill: Tanah - Membuat dinding tanah</div>
+                    </div>
+                </div>
+
+                <!-- Snake Shop -->
+                <div class="panel-section">
+                    <h3>🛒 TOKO ULAR</h3>
+                    <div id="snakeShop"></div>
+                </div>
+
+                <!-- Controls -->
+                <div class="panel-section">
+                    <h3>🎮 KONTROL</h3>
+                    <div style="font-size:0.85rem; color:#aaa; line-height:1.8;">
+                        <div>WASD / Arrow = Gerak</div>
+                        <div>Q = Skill Tanah</div>
+                        <div>E = Skill Serang</div>
+                        <div>Space = Boost</div>
+                        <div>M = Toggle Minimap</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skill Bar -->
+        <div id="skillBar">
+            <div class="skill-btn" id="skillQ" onclick="useSkill('Q')">
+                <span class="key-hint">Q</span>
+                <span id="skillQIcon">🌍</span>
+                <div class="cd-overlay" id="skillQCD" style="height:0%;"></div>
+            </div>
+            <div class="skill-btn" id="skillE" onclick="useSkill('E')">
+                <span class="key-hint">E</span>
+                <span id="skillEIcon">⚔️</span>
+                <div class="cd-overlay" id="skillECD" style="height:0%;"></div>
+            </div>
+            <div class="skill-btn" id="skillSpace" onclick="useSkill('SPACE')">
+                <span class="key-hint">Space</span>
+                <span>⚡</span>
+                <div class="cd-overlay" id="skillSpaceCD" style="height:0%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal">
+        <div class="modal-content">
+            <h2>⚙️ PENGATURAN</h2>
+            <div class="setting-row">
+                <label>Suara Efek</label>
+                <div class="toggle-switch active" id="soundToggle" onclick="toggleSetting(this)"></div>
+            </div>
+            <div class="setting-row">
+                <label>Musik Latar</label>
+                <div class="toggle-switch active" id="musicToggle" onclick="toggleSetting(this)"></div>
+            </div>
+            <div class="setting-row">
+                <label>Efek Partikel</label>
+                <div class="toggle-switch active" id="particleToggle" onclick="toggleSetting(this)"></div>
+            </div>
+            <div class="setting-row">
+                <label>Tampilkan Nama Bot</label>
+                <div class="toggle-switch active" id="nameToggle" onclick="toggleSetting(this)"></div>
+            </div>
+            <div class="setting-row">
+                <label>Mode Gelap</label>
+                <div class="toggle-switch active" id="darkToggle" onclick="toggleSetting(this)"></div>
+            </div>
+            <div style="margin-top:20px; text-align:center;">
+                <button class="btn btn-primary" onclick="toggleSettings()">TUTUP</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen">
+        <h1>💀 GAME OVER</h1>
+        <div class="final-stats">
+            <div>Score Akhir</div>
+            <div class="big-number" id="finalScore">0</div>
+            <div style="margin-top:10px; color:#888;">
+                Rank: #<span id="finalRank">1</span> | 
+                Kill: <span id="finalKills">0</span> | 
+                Waktu: <span id="finalTime">0:00</span>
+            </div>
+        </div>
+        <div style="display:flex; gap:15px;">
+            <button class="btn btn-primary" onclick="restartGame()">🔄 MAIN LAGI</button>
+            <button class="btn btn-primary" style="background:linear-gradient(135deg,#ff4444,#cc0000);" onclick="backToMenu()">🏠 MENU</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GAME CONFIGURATION ====================
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 600;
+        const GRID_SIZE = 20;
+        const COLS = CANVAS_WIDTH / GRID_SIZE;
+        const ROWS = CANVAS_HEIGHT / GRID_SIZE;
+        const FOOD_SPAWN_INTERVAL = 500;
+        const MAX_FOOD = 50;
+        const BOT_COUNT = 9;
+        const TOTAL_SNAKES = 10;
+        const SKILL_COOLDOWN = 8000;
+
+        // ==================== 30 SNAKE TYPES ====================
+        const SNAKE_TYPES = [
+            { id: 0, name: "Ular Hijau", emoji: "🐍", color: "#00ff88", skill: "Tanah", skillDesc: "Membuat dinding tanah penghalang", price: 0, owned: true, skillIcon: "🌍" },
+            { id: 1, name: "Ular Merah", emoji: "🐉", color: "#ff4444", skill: "Api", skillDesc: "Menembakkan bola api ke depan", price: 10, owned: false, skillIcon: "🔥" },
+            { id: 2, name: "Ular Biru", emoji: "🦕", color: "#4488ff", skill: "Air", skillDesc: "Membuat gelombang air mendorong musuh", price: 50, owned: false, skillIcon: "💧" },
+            { id: 3, name: "Ular Kuning", emoji: "🦎", color: "#ffdd00", skill: "Listrik", skillDesc: "Menyerang dengan petir radius", price: 250, owned: false, skillIcon: "⚡" },
+            { id: 4, name: "Ular Ungu", emoji: "🐲", color: "#aa44ff", skill: "Racun", skillDesc: "Meracuni ular di sekitar", price: 1250, owned: false, skillIcon: "☠️" },
+            { id: 5, name: "Ular Putih", emoji: "🦂", color: "#ffffff", skill: "Es", skillDesc: "Membekukan musuh sementara", price: 6250, owned: false, skillIcon: "❄️" },
+            { id: 6, name: "Ular Hitam", emoji: "🐍", color: "#333333", skill: "Bayangan", skillDesc: "Menjadi tak terlihat 3 detik", price: 31250, owned: false, skillIcon: "👻" },
+            { id: 7, name: "Ular Emas", emoji: "🐉", color: "#ffaa00", skill: "Kilau", skillDesc: "Menggandakan poin makanan", price: 156250, owned: false, skillIcon: "✨" },
+            { id: 8, name: "Ular Pink", emoji: "🦎", color: "#ff88cc", skill: "Hipnosis", skillDesc: "Mengontrol arah musuh 2 detik", price: 781250, owned: false, skillIcon: "😵" },
+            { id: 9, name: "Ular Coklat", emoji: "🐍", color: "#8B4513", skill: "Gempa", skillDesc: "Membuat gempa melumpuhkan musuh", price: 3906250, owned: false, skillIcon: "🌍" },
+            { id: 10, name: "Ular Oranye", emoji: "🦕", color: "#ff8800", skill: "Angin", skillDesc: "Mendorong musuh menjauh", price: 19531250, owned: false, skillIcon: "💨" },
+            { id: 11, name: "Ular Abu", emoji: "🐲", color: "#888888", skill: "Baja", skillDesc: "Kebal dari serangan 3 detik", price: 97656250, owned: false, skillIcon: "🛡️" },
+            { id: 12, name: "Ular Toska", emoji: "🦎", color: "#00ffcc", skill: "Regen", skillDesc: "Regenerasi panjang ular", price: 488281250, owned: false, skillIcon: "💚" },
+            { id: 13, name: "Ular Perak", emoji: "🐍", color: "#c0c0c0", skill: "Refleksi", skillDesc: "Memantulkan serangan balik", price: 2441406250, owned: false, skillIcon: "🔮" },
+            { id: 14, name: "Ular Neon", emoji: "🐉", color: "#ff00ff", skill: "Laser", skillDesc: "Menembakkan laser memotong musuh", price: 12207031250, owned: false, skillIcon: "🔴" },
+            { id: 15, name: "Ular Hutan", emoji: "🦕", color: "#228b22", skill: "Akar", skillDesc: "Akar menjebak musuh", price: 61035156250, owned: false, skillIcon: "🌿" },
+            { id: 16, name: "Ular Laut", emoji: "🐲", color: "#006994", skill: "Tsunami", skillDesc: "Gelombang besar mendorong semua", price: 305175781250, owned: false, skillIcon: "🌊" },
+            { id: 17, name: "Ular Gunung", emoji: "🦎", color: "#4a4a4a", skill: "Lava", skillDesc: "Memuntahkan lava memblokir jalan", price: 1525878906250, owned: false, skillIcon: "🌋" },
+            { id: 18, name: "Ular Awan", emoji: "🐍", color: "#e0e0e0", skill: "Petir", skillDesc: "Petir menyambar 5 musuh terdekat", price: 7629394531250, owned: false, skillIcon: "⛈️" },
+            { id: 19, name: "Ular Matahari", emoji: "🐉", color: "#ffdd44", skill: "Supernova", skillDesc: "Ledakan besar menghancurkan sekitar", price: 38146972656250, owned: false, skillIcon: "☀️" },
+            { id: 20, name: "Ular Bulan", emoji: "🦕", color: "#ccccff", skill: "Tidur", skillDesc: "Membuat musuh tertidur 4 detik", price: 190734863281250, owned: false, skillIcon: "🌙" },
+            { id: 21, name: "Ular Bintang", emoji: "🐲", color: "#ffff88", skill: "Meteor", skillDesc: "Hujan meteor dari langit", price: 953674316406250, owned: false, skillIcon: "☄️" },
+            { id: 22, name: "Ular Galaxy", emoji: "🦎", color: "#6600ff", skill: "Lubang Hitam", skillDesc: "Menarik musuh ke pusat", price: 4768371582031250, owned: false, skillIcon: "🌌" },
+            { id: 23, name: "Ular Kristal", emoji: "🐍", color: "#00ffff", skill: "Prism", skillDesc: "Memantulkan serangan ke banyak arah", price: 23841857910156250, owned: false, skillIcon: "💎" },
+            { id: 24, name: "Ular Naga", emoji: "🐉", color: "#ff0000", skill: "Nafas Api", skillDesc: "Api meluas ke 3 arah", price: 119209289550781250, owned: false, skillIcon: "🔥" },
+            { id: 25, name: "Ular Phoenix", emoji: "🦕", color: "#ff6600", skill: "Rebirth", skillDesc: "Bangkit kembali saat mati sekali", price: 596046447753906250, owned: false, skillIcon: "🔥" },
+            { id: 26, name: "Ular Leviathan", emoji: "🐲", color: "#001133", skill: "Ditelan", skillDesc: "Menelan musuh di depan langsung", price: 2980232238769531250, owned: false, skillIcon: "🌊" },
+            { id: 27, name: "Ular Titan", emoji: "🦎", color: "#8b0000", skill: "Hancur", skillDesc: "Menghancurkan semua di sekitar", price: 14901161193847656250, owned: false, skillIcon: "💥" },
+            { id: 28, name: "Ular Dewa", emoji: "🐍", color: "#ffd700", skill: "Omnipotent", skillDesc: "Semua skill aktif sekaligus 5 detik", price: 74505805969238281250, owned: false, skillIcon: "👑" },
+            { id: 29, name: "Ular Khaos", emoji: "🐉", color: "#ff00aa", skill: "Khaos", skillDesc: "Mengacak posisi semua musuh", price: 372529029846191406250, owned: false, skillIcon: "🌀" }
+        ];
+
+        // ==================== FOOD TYPES ====================
+        const FOOD_TYPES = [
+            { emoji: "🍎", name: "Apel", points: 10, weight: 0.1, color: "#ff4444", glow: "#ff6666" },
+            { emoji: "🍐", name: "Pir", points: 15, weight: 0.15, color: "#88ff44", glow: "#aaff66" },
+            { emoji: "🍊", name: "Jeruk", points: 20, weight: 0.2, color: "#ff8800", glow: "#ffaa33" },
+            { emoji: "🍋", name: "Lemon", points: 25, weight: 0.25, color: "#ffff00", glow: "#ffff66" },
+            { emoji: "🍌", name: "Pisang", points: 30, weight: 0.3, color: "#ffdd00", glow: "#ffee44" },
+            { emoji: "🍉", name: "Semangka", points: 40, weight: 0.5, color: "#ff0044", glow: "#ff2266" },
+            { emoji: "🍇", name: "Anggur", points: 35, weight: 0.3, color: "#8800ff", glow: "#aa33ff" },
+            { emoji: "🍓", name: "Stroberi", points: 45, weight: 0.2, color: "#ff0044", glow: "#ff2266" },
+            { emoji: "🫐", name: "Blueberry", points: 50, weight: 0.15, color: "#4444ff", glow: "#6666ff" },
+            { emoji: "🍒", name: "Ceri", points: 55, weight: 0.1, color: "#cc0044", glow: "#ee2266" },
+            { emoji: "🍑", name: "Persik", points: 60, weight: 0.4, color: "#ffaa88", glow: "#ffccaa" },
+            { emoji: "🍍", name: "Nanas", points: 70, weight: 0.6, color: "#ffdd00", glow: "#ffee44" },
+            { emoji: "🥝", name: "Kiwi", points: 65, weight: 0.25, color: "#88aa00", glow: "#aacc22" },
+            { emoji: "🥥", name: "Kelapa", points: 80, weight: 1.0, color: "#8B4513", glow: "#aa6633" },
+            { emoji: "🍄", name: "Jamur", points: 100, weight: 0.05, color: "#ff4444", glow: "#ff6666", special: "poison" },
+            { emoji: "🌟", name: "Bintang Emas", points: 200, weight: 0.02, color: "#ffdd00", glow: "#ffff00", special: "star" },
+            { emoji: "💎", name: "Berlian", points: 500, weight: 0.01, color: "#00ffff", glow: "#66ffff", special: "diamond" }
+        ];
+
+        // ==================== BOT NAMES ====================
+        const BOT_NAMES = [
+            "ShadowSlayer", "VenomX", "CobraKing", "PythonPro", "SerpentSoul",
+            "RattleTrap", "MambaMind", "ViperVex", "AnacondaAce", "CoralCruel",
+            "TaipanTerror", "BoaBane", "KraitKiller", "AspApex", "ElapidaeElite"
+        ];
+
+        // ==================== GAME STATE ====================
+        let canvas, ctx, minimapCanvas, minimapCtx;
+        let gameLoop, foodSpawnInterval, gameTimeInterval;
+        let player = null;
+        let bots = [];
+        let foods = [];
+        let particles = [];
+        let walls = [];
+        let gameRunning = false;
+        let gameTime = 0;
+        let playerCoins = 100;
+        let selectedSnakeId = 0;
+        let killFeed = [];
+        let settings = {
+            sound: true,
+            music: true,
+            particles: true,
+            showNames: true,
+            darkMode: true
+        };
+        let skillCooldowns = { Q: 0, E: 0, SPACE: 0 };
+        let leaderboard = [];
+
+        // ==================== COLOR UTILITY FUNCTIONS ====================
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 0, g: 255, b: 136 };
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(c => Math.min(255, Math.max(0, Math.round(c))).toString(16).padStart(2, '0')).join('');
+        }
+
+        function lightenColor(hex, percent) {
+            const { r, g, b } = hexToRgb(hex);
+            const amount = percent / 100 * 255;
+            return rgbToHex(r + amount, g + amount, b + amount);
+        }
+
+        function darkenColor(hex, percent) {
+            const { r, g, b } = hexToRgb(hex);
+            const amount = percent / 100 * 255;
+            return rgbToHex(r - amount, g - amount, b - amount);
+        }
+
+        function interpolateColor(hex1, hex2, t) {
+            const c1 = hexToRgb(hex1);
+            const c2 = hexToRgb(hex2);
+            return rgbToHex(
+                c1.r + (c2.r - c1.r) * t,
+                c1.g + (c2.g - c1.g) * t,
+                c1.b + (c2.b - c1.b) * t
+            );
+        }
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            minimapCanvas = document.getElementById('minimap');
+            minimapCtx = minimapCanvas.getContext('2d');
+            minimapCanvas.width = 150;
+            minimapCanvas.height = 150;
+            document.addEventListener('keydown', handleKeyDown);
+            loadGameData();
+            renderShop();
+        }
+
+        function startGame() {
+            const name = document.getElementById('playerName').value.trim() || 'LO';
+            document.getElementById('displayName').textContent = name;
+            document.getElementById('loginScreen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('gameUI').style.display = 'flex';
+                initGame(name);
+            }, 500);
+        }
+
+        function initGame(playerName) {
+            gameRunning = true;
+            gameTime = 0;
+            foods = [];
+            particles = [];
+            walls = [];
+            killFeed = [];
+            bots = [];
+            skillCooldowns = { Q: 0, E: 0, SPACE: 0 };
+            
+            const snakeType = SNAKE_TYPES[selectedSnakeId];
+            player = {
+                id: 0, name: playerName, isPlayer: true,
+                x: Math.floor(COLS / 2), y: Math.floor(ROWS / 2),
+                dx: 1, dy: 0,
+                body: [
+                    { x: Math.floor(COLS / 2), y: Math.floor(ROWS / 2) },
+                    { x: Math.floor(COLS / 2) - 1, y: Math.floor(ROWS / 2) },
+                    { x: Math.floor(COLS / 2) - 2, y: Math.floor(ROWS / 2) }
+                ],
+                score: 0, kills: 0, length: 3,
+                color: snakeType.color, emoji: snakeType.emoji,
+                skill: snakeType.skill, skillIcon: snakeType.skillIcon,
+                speed: 100, boostActive: false, invisible: false,
+                invincible: false, poisoned: false, frozen: false,
+                rebirthUsed: false, alive: true,
+                directionQueue: [], targetFood: null, aiDifficulty: 0
+            };
+
+            for (let i = 0; i < BOT_COUNT; i++) {
+                const botType = SNAKE_TYPES[Math.floor(Math.random() * Math.min(5, SNAKE_TYPES.length))];
+                const bot = {
+                    id: i + 1,
+                    name: BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)] + (i + 1),
+                    isPlayer: false,
+                    x: Math.floor(Math.random() * (COLS - 10)) + 5,
+                    y: Math.floor(Math.random() * (ROWS - 10)) + 5,
+                    dx: [0, 1, 0, -1][Math.floor(Math.random() * 4)],
+                    dy: [-1, 0, 1, 0][Math.floor(Math.random() * 4)],
+                    body: [], score: 0, kills: 0, length: 3,
+                    color: botType.color, emoji: botType.emoji,
+                    skill: botType.skill, skillIcon: botType.skillIcon,
+                    speed: 90 + Math.random() * 40,
+                    boostActive: false, invisible: false, invincible: false,
+                    poisoned: false, frozen: false, rebirthUsed: false,
+                    alive: true, directionQueue: [], targetFood: null,
+                    aiDifficulty: 0.3 + Math.random() * 0.7,
+                    lastMove: 0, changeDirTimer: 0
+                };
+                for (let j = 0; j < 3; j++) {
+                    bot.body.push({ x: bot.x - bot.dx * j, y: bot.y - bot.dy * j });
+                }
+                bots.push(bot);
+            }
+
+            updatePlayerInfo();
+            updateActiveSnakeInfo();
+            gameLoop = setInterval(gameUpdate, 80);
+            foodSpawnInterval = setInterval(spawnFood, FOOD_SPAWN_INTERVAL);
+            gameTimeInterval = setInterval(() => {
+                gameTime++;
+                document.getElementById('timeDisplay').textContent = formatTime(gameTime);
+            }, 1000);
+            for (let i = 0; i < 20; i++) spawnFood();
+        }
+
+        // ==================== GAME UPDATE ====================
+        function gameUpdate() {
+            if (!gameRunning) return;
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            drawGrid();
+            drawWalls();
+            updateFoods();
+            drawFoods();
+
+            if (player.alive) {
+                updateSnake(player);
+                checkCollisions(player);
+            }
+            drawSnake(player);
+
+            bots.forEach(bot => {
+                if (bot.alive) {
+                    updateBot(bot);
+                    updateSnake(bot);
+                    checkCollisions(bot);
+                }
+                drawSnake(bot);
+            });
+
+            updateParticles();
+            drawMinimap();
+            updateLeaderboard();
+            updateSkillCooldowns();
+
+            if (!player.alive) endGame();
+            if (bots.every(b => !b.alive) && player.alive) {
+                showNotification("🏆 SEMUA BOT MATI! KAMU MENANG!");
+                setTimeout(endGame, 2000);
+            }
+        }
+
+        // ==================== SNAKE UPDATE ====================
+        function updateSnake(snake) {
+            if (!snake.alive || snake.frozen) return;
+            if (snake.directionQueue.length > 0) {
+                const newDir = snake.directionQueue.shift();
+                if (!(newDir.dx === -snake.dx && newDir.dy === -snake.dy)) {
+                    snake.dx = newDir.dx;
+                    snake.dy = newDir.dy;
+                }
+            }
+            if (!snake.isPlayer) {
+                snake.lastMove++;
+                if (snake.lastMove < Math.floor(snake.speed / 20)) return;
+                snake.lastMove = 0;
+            }
+            const newHead = {
+                x: snake.body[0].x + snake.dx,
+                y: snake.body[0].y + snake.dy
+            };
+            if (newHead.x < 0) newHead.x = COLS - 1;
+            if (newHead.x >= COLS) newHead.x = 0;
+            if (newHead.y < 0) newHead.y = ROWS - 1;
+            if (newHead.y >= ROWS) newHead.y = 0;
+
+            snake.body.unshift(newHead);
+            let ate = false;
+            for (let i = foods.length - 1; i >= 0; i--) {
+                const food = foods[i];
+                if (Math.abs(newHead.x * GRID_SIZE + GRID_SIZE/2 - food.x) < GRID_SIZE &&
+                    Math.abs(newHead.y * GRID_SIZE + GRID_SIZE/2 - food.y) < GRID_SIZE) {
+                    snake.score += food.points;
+                    snake.length++;
+                    if (snake.isPlayer) {
+                        playerCoins += food.weight;
+                        showNotification(`+${food.points} pts | +${food.weight.toFixed(2)} kg = ${food.weight.toFixed(2)} 🪙`);
+                    }
+                    if (settings.particles) createParticles(food.x, food.y, food.color);
+                    foods.splice(i, 1);
+                    ate = true;
+                    break;
+                }
+            }
+            if (!ate) snake.body.pop();
+            snake.x = newHead.x;
+            snake.y = newHead.y;
+        }
+
+        // ==================== BOT AI ====================
+        function updateBot(bot) {
+            if (!bot.alive || bot.frozen) return;
+            bot.changeDirTimer++;
+            if (bot.changeDirTimer < 3) return;
+            bot.changeDirTimer = 0;
+
+            let nearestFood = null, minDist = Infinity;
+            foods.forEach(food => {
+                const dist = Math.abs(bot.x - food.gridX) + Math.abs(bot.y - food.gridY);
+                if (dist < minDist) { minDist = dist; nearestFood = food; }
+            });
+
+            let nearestSnake = null, nearestSnakeDist = Infinity;
+            const allSnakes = [player, ...bots].filter(s => s.alive && s.id !== bot.id);
+            allSnakes.forEach(s => {
+                const dist = Math.abs(bot.x - s.x) + Math.abs(bot.y - s.y);
+                if (dist < nearestSnakeDist) { nearestSnakeDist = dist; nearestSnake = s; }
+            });
+
+            let targetX, targetY;
+            if (nearestFood && (bot.aiDifficulty < 0.6 || !nearestSnake || nearestSnakeDist > 8)) {
+                targetX = nearestFood.gridX; targetY = nearestFood.gridY;
+            } else if (nearestSnake && bot.length > nearestSnake.length + 2 && nearestSnakeDist < 10) {
+                targetX = nearestSnake.x; targetY = nearestSnake.y;
+            } else if (nearestSnake && bot.length < nearestSnake.length && nearestSnakeDist < 6) {
+                targetX = bot.x + (bot.x - nearestSnake.x) * 3;
+                targetY = bot.y + (bot.y - nearestSnake.y) * 3;
+            } else if (nearestFood) {
+                targetX = nearestFood.gridX; targetY = nearestFood.gridY;
+            } else {
+                targetX = bot.x + Math.floor(Math.random() * 10) - 5;
+                targetY = bot.y + Math.floor(Math.random() * 10) - 5;
+            }
+
+            let bestDir = null, bestScore = -Infinity;
+            const dirs = [{dx:0,dy:-1},{dx:1,dy:0},{dx:0,dy:1},{dx:-1,dy:0}];
+            dirs.forEach(dir => {
+                if (dir.dx === -bot.dx && dir.dy === -bot.dy) return;
+                const newX = bot.x + dir.dx, newY = bot.y + dir.dy;
+                const wrapX = newX < 0 ? COLS - 1 : (newX >= COLS ? 0 : newX);
+                const wrapY = newY < 0 ? ROWS - 1 : (newY >= ROWS ? 0 : newY);
+                if (walls.some(w => w.x === wrapX && w.y === wrapY)) return;
+                if (bot.body.some((seg, i) => i > 0 && seg.x === wrapX && seg.y === wrapY)) return;
+
+                let score = 0;
+                const distToTarget = Math.abs(wrapX - targetX) + Math.abs(wrapY - targetY);
+                score -= distToTarget * 2;
+                allSnakes.forEach(s => {
+                    s.body.forEach(seg => {
+                        const dist = Math.abs(wrapX - seg.x) + Math.abs(wrapY - seg.y);
+                        if (dist < 3) score -= (3 - dist) * 10;
+                    });
+                });
+                score -= Math.abs(wrapX - COLS/2) * 0.1;
+                score -= Math.abs(wrapY - ROWS/2) * 0.1;
+                if (score > bestScore) { bestScore = score; bestDir = dir; }
+            });
+
+            if (bestDir) { bot.dx = bestDir.dx; bot.dy = bestDir.dy; }
+            if (Math.random() < 0.01 * bot.aiDifficulty) useBotSkill(bot);
+            if (Math.random() < 0.005 && bot.score > 50) {
+                bot.boostActive = true;
+                setTimeout(() => bot.boostActive = false, 1000);
+            }
+        }
+
+        function useBotSkill(bot) {
+            if (bot.skill === 'Tanah' && Math.random() < 0.3) {
+                const wx = bot.x + bot.dx * 2, wy = bot.y + bot.dy * 2;
+                if (wx >= 0 && wx < COLS && wy >= 0 && wy < ROWS) walls.push({ x: wx, y: wy, timer: 500 });
+            } else if (bot.skill === 'Api' && Math.random() < 0.2) {
+                const fx = bot.x + bot.dx * 3, fy = bot.y + bot.dy * 3;
+                if (fx >= 0 && fx < COLS && fy >= 0 && fy < ROWS) {
+                    walls.push({ x: fx, y: fy, timer: 100, fire: true });
+                    const targets = [player, ...bots].filter(s => s.alive && s.id !== bot.id);
+                    targets.forEach(t => {
+                        if (Math.abs(t.x - fx) <= 1 && Math.abs(t.y - fy) <= 1) {
+                            killSnake(t);
+                            bot.kills++;
+                            addKillFeed(bot.name, t.name);
+                        }
+                    });
+                }
+            }
+        }
+
+        // ==================== COLLISIONS ====================
+        function checkCollisions(snake) {
+            if (!snake.alive) return;
+            const head = snake.body[0];
+            for (let i = walls.length - 1; i >= 0; i--) {
+                if (walls[i].x === head.x && walls[i].y === head.y) {
+                    if (!snake.invincible) { killSnake(snake); return; }
+                }
+            }
+            for (let i = 1; i < snake.body.length; i++) {
+                if (head.x === snake.body[i].x && head.y === snake.body[i].y) {
+                    if (!snake.invincible) { killSnake(snake); return; }
+                }
+            }
+            const allSnakes = snake.isPlayer ? bots : [player, ...bots.filter(b => b.id !== snake.id)];
+            allSnakes.forEach(other => {
+                if (!other.alive) return;
+                other.body.forEach((seg, i) => {
+                    if (head.x === seg.x && head.y === seg.y) {
+                        if (i === 0) {
+                            if (snake.length >= other.length) {
+                                if (!other.invincible) {
+                                    killSnake(other);
+                                    snake.kills++; snake.score += other.score;
+                                    snake.length += Math.floor(other.length / 2);
+                                    addKillFeed(snake.name, other.name);
+                                }
+                            } else {
+                                if (!snake.invincible) {
+                                    killSnake(snake);
+                                    other.kills++; other.score += snake.score;
+                                    other.length += Math.floor(snake.length / 2);
+                                    addKillFeed(other.name, snake.name);
+                                }
+                            }
+                        } else {
+                            if (!snake.invincible) {
+                                killSnake(snake);
+                                other.kills++; other.score += Math.floor(snake.score / 2);
+                                other.length += Math.floor(snake.length / 3);
+                                addKillFeed(other.name, snake.name);
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        function killSnake(snake) {
+            if (!snake.alive) return;
+            if (snake.skill === 'Rebirth' && !snake.rebirthUsed) {
+                snake.rebirthUsed = true;
+                snake.invincible = true;
+                setTimeout(() => snake.invincible = false, 3000);
+                showNotification(`${snake.name} REBIRTH! 🔥`);
+                return;
+            }
+            snake.alive = false;
+            snake.body.forEach((seg, i) => {
+                if (i % 2 === 0 && foods.length < MAX_FOOD) {
+                    const foodType = FOOD_TYPES[Math.floor(Math.random() * (FOOD_TYPES.length - 3))];
+                    foods.push({
+                        x: seg.x * GRID_SIZE + GRID_SIZE/2,
+                        y: seg.y * GRID_SIZE + GRID_SIZE/2,
+                        gridX: seg.x, gridY: seg.y,
+                        ...foodType, pulse: 0
+                    });
+                }
+            });
+            if (settings.particles) {
+                snake.body.forEach(seg => createParticles(seg.x * GRID_SIZE + GRID_SIZE/2, seg.y * GRID_SIZE + GRID_SIZE/2, snake.color));
+            }
+            if (snake.isPlayer) showNotification("💀 KAMU MATI!");
+        }
+
+        // ==================== DRAWING ====================
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(0, 255, 136, 0.05)';
+            ctx.lineWidth = 0.5;
+            for (let x = 0; x <= CANVAS_WIDTH; x += GRID_SIZE) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CANVAS_HEIGHT); ctx.stroke();
+            }
+            for (let y = 0; y <= CANVAS_HEIGHT; y += GRID_SIZE) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CANVAS_WIDTH, y); ctx.stroke();
+            }
+        }
+
+        function drawWalls() {
+            for (let i = walls.length - 1; i >= 0; i--) {
+                const w = walls[i];
+                w.timer--;
+                if (w.timer <= 0) { walls.splice(i, 1); continue; }
+                const alpha = Math.min(1, w.timer / 100);
+                if (w.fire) {
+                    ctx.fillStyle = `rgba(255, 68, 0, ${alpha})`;
+                } else {
+                    ctx.fillStyle = `rgba(139, 69, 19, ${alpha})`;
+                }
+                ctx.fillRect(w.x * GRID_SIZE, w.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.3})`;
+                ctx.strokeRect(w.x * GRID_SIZE, w.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+            }
+        }
+
+        function drawFoods() {
+            foods.forEach(food => {
+                food.pulse += 0.1;
+                const pulseScale = 1 + Math.sin(food.pulse) * 0.1;
+                ctx.save();
+                ctx.translate(food.x, food.y);
+                ctx.scale(pulseScale, pulseScale);
+                ctx.shadowColor = food.glow;
+                ctx.shadowBlur = 15;
+                ctx.font = `${GRID_SIZE}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(food.emoji, 0, 0);
+                ctx.restore();
+            });
+        }
+
+        function drawSnake(snake) {
+            if (!snake.alive) return;
+            ctx.save();
+            if (snake.invisible) ctx.globalAlpha = 0.3;
+            if (snake.invincible) { ctx.shadowColor = '#ffff00'; ctx.shadowBlur = 20; }
+
+            snake.body.forEach((seg, i) => {
+                const x = seg.x * GRID_SIZE;
+                const y = seg.y * GRID_SIZE;
+                const centerX = x + GRID_SIZE / 2;
+                const centerY = y + GRID_SIZE / 2;
+
+                if (i === 0) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                    ctx.beginPath();
+                    ctx.ellipse(centerX + 2, centerY + 2, GRID_SIZE/2, GRID_SIZE/2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    const headGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, GRID_SIZE/2);
+                    headGradient.addColorStop(0, lightenColor(snake.color, 30));
+                    headGradient.addColorStop(1, snake.color);
+                    ctx.fillStyle = headGradient;
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY, GRID_SIZE/2 - 1, GRID_SIZE/2 - 1, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    const eyeOffset = GRID_SIZE / 5;
+                    const eyeX = centerX + snake.dx * eyeOffset;
+                    const eyeY = centerY + snake.dy * eyeOffset;
+
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath(); ctx.arc(eyeX - snake.dy * 3, eyeY + snake.dx * 3, 3, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#000';
+                    ctx.beginPath(); ctx.arc(eyeX - snake.dy * 3 + snake.dx, eyeY + snake.dx * 3 + snake.dy, 1.5, 0, Math.PI * 2); ctx.fill();
+
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath(); ctx.arc(eyeX + snake.dy * 3, eyeY - snake.dx * 3, 3, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#000';
+                    ctx.beginPath(); ctx.arc(eyeX + snake.dy * 3 + snake.dx, eyeY - snake.dx * 3 + snake.dy, 1.5, 0, Math.PI * 2); ctx.fill();
+
+                    if (Math.random() < 0.1) {
+                        ctx.strokeStyle = '#ff4444'; ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(centerX + snake.dx * GRID_SIZE/2, centerY + snake.dy * GRID_SIZE/2);
+                        ctx.lineTo(centerX + snake.dx * (GRID_SIZE/2 + 6), centerY + snake.dy * (GRID_SIZE/2 + 6));
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(centerX + snake.dx * (GRID_SIZE/2 + 6), centerY + snake.dy * (GRID_SIZE/2 + 6));
+                        ctx.lineTo(centerX + snake.dx * (GRID_SIZE/2 + 4) - snake.dy * 3, centerY + snake.dy * (GRID_SIZE/2 + 4) + snake.dx * 3);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(centerX + snake.dx * (GRID_SIZE/2 + 6), centerY + snake.dy * (GRID_SIZE/2 + 6));
+                        ctx.lineTo(centerX + snake.dx * (GRID_SIZE/2 + 4) + snake.dy * 3, centerY + snake.dy * (GRID_SIZE/2 + 4) - snake.dx * 3);
+                        ctx.stroke();
+                    }
+
+                    ctx.font = `${GRID_SIZE * 0.6}px Arial`;
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(snake.emoji, centerX, centerY - 2);
+
+                } else {
+                    const bodyRatio = i / snake.body.length;
+                    const segColor = interpolateColor(snake.color, darkenColor(snake.color, 40), bodyRatio);
+                    const scale = 1 - (bodyRatio * 0.3);
+                    const size = (GRID_SIZE/2 - 2) * scale;
+                    const bodyGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, size);
+                    bodyGradient.addColorStop(0, lightenColor(segColor, 15));
+                    bodyGradient.addColorStop(1, segColor);
+                    ctx.fillStyle = bodyGradient;
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY, size, size, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    ctx.lineWidth = 0.5;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, size * 0.6, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                if (i === 0 && settings.showNames) {
+                    ctx.fillStyle = snake.isPlayer ? '#00ff88' : '#ff4444';
+                    ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center';
+                    ctx.fillText(snake.name, centerX, y - 8);
+                    ctx.fillStyle = '#888'; ctx.font = '9px Arial';
+                    ctx.fillText(`${snake.score} pts`, centerX, y - 18);
+                }
+            });
+
+            if (snake.boostActive) {
+                ctx.globalAlpha = 0.3; ctx.fillStyle = snake.color;
+                snake.body.forEach(seg => ctx.fillRect(seg.x * GRID_SIZE, seg.y * GRID_SIZE, GRID_SIZE, GRID_SIZE));
+            }
+            ctx.restore();
+        }
+
+        // ==================== FOOD SYSTEM ====================
+        function spawnFood() {
+            if (foods.length >= MAX_FOOD) return;
+            const x = Math.floor(Math.random() * COLS);
+            const y = Math.floor(Math.random() * ROWS);
+            const allSnakes = [player, ...bots];
+            for (let s of allSnakes) {
+                if (!s.alive) continue;
+                for (let seg of s.body) { if (seg.x === x && seg.y === y) return; }
+            }
+            if (walls.some(w => w.x === x && w.y === y)) return;
+
+            const rand = Math.random();
+            let foodType;
+            if (rand < 0.5) foodType = FOOD_TYPES[Math.floor(Math.random() * 10)];
+            else if (rand < 0.8) foodType = FOOD_TYPES[10 + Math.floor(Math.random() * 4)];
+            else if (rand < 0.95) foodType = FOOD_TYPES[14];
+            else if (rand < 0.99) foodType = FOOD_TYPES[15];
+            else foodType = FOOD_TYPES[16];
+
+            foods.push({
+                x: x * GRID_SIZE + GRID_SIZE/2,
+                y: y * GRID_SIZE + GRID_SIZE/2,
+                gridX: x, gridY: y,
+                ...foodType, pulse: Math.random() * Math.PI * 2
+            });
+        }
+
+        function updateFoods() {}
+
+        // ==================== PARTICLES ====================
+        function createParticles(x, y, color) {
+            if (!settings.particles) return;
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    life: 30, maxLife: 30,
+                    color: color, size: Math.random() * 4 + 2
+                });
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx; p.y += p.vy;
+                p.life--; p.vx *= 0.95; p.vy *= 0.95;
+                const alpha = p.life / p.maxLife;
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 1;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        // ==================== MINIMAP ====================
+        function drawMinimap() {
+            minimapCtx.fillStyle = '#0a0a0a';
+            minimapCtx.fillRect(0, 0, 150, 150);
+            const scaleX = 150 / CANVAS_WIDTH;
+            const scaleY = 150 / CANVAS_HEIGHT;
+            minimapCtx.fillStyle = '#ff4444';
+            foods.forEach(food => minimapCtx.fillRect(food.x * scaleX - 1, food.y * scaleY - 1, 2, 2));
+            const allSnakes = [player, ...bots].filter(s => s.alive);
+            allSnakes.forEach(snake => {
+                minimapCtx.fillStyle = snake.isPlayer ? '#00ff88' : '#ff4444';
+                snake.body.forEach(seg => {
+                    minimapCtx.fillRect(seg.x * GRID_SIZE * scaleX, seg.y * GRID_SIZE * scaleY,
+                        Math.max(2, GRID_SIZE * scaleX), Math.max(2, GRID_SIZE * scaleY));
+                });
+            });
+        }
+
+        // ==================== LEADERBOARD ====================
+        function updateLeaderboard() {
+            const allSnakes = [player, ...bots].filter(s => s.alive);
+            allSnakes.sort((a, b) => b.score - a.score);
+            leaderboard = allSnakes;
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = '';
+            allSnakes.forEach((snake, i) => {
+                const item = document.createElement('div');
+                item.className = `leaderboard-item ${snake.isPlayer ? 'active' : ''}`;
+                const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+                item.innerHTML = `
+                    <div class="rank ${rankClass}">${i + 1}</div>
+                    <div class="snake-icon">${snake.emoji}</div>
+                    <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        ${snake.name}
+                    </div>
+                    <div class="score">${snake.score}</div>
+                `;
+                list.appendChild(item);
+            });
+            const playerRank = allSnakes.findIndex(s => s.isPlayer) + 1;
+            document.getElementById('playerRank').textContent = playerRank || '-';
+        }
+
+        // ==================== SKILL SYSTEM ====================
+        function useSkill(key) {
+            if (!player || !player.alive) return;
+            if (skillCooldowns[key] > 0) {
+                showNotification(`Skill cooldown: ${(skillCooldowns[key]/1000).toFixed(1)}s`);
+                return;
+            }
+
+            const snakeType = SNAKE_TYPES[selectedSnakeId];
+            
+            if (key === 'Q') {
+                // Primary skill based on snake type
+                activateSkill(player, snakeType.skill);
+            } else if (key === 'E') {
+                // Attack skill
+                activateAttack(player);
+            } else if (key === 'SPACE') {
+                // Boost
+                player.boostActive = true;
+                document.getElementById('speedIndicator').textContent = 'BOOST!';
+                document.getElementById('speedIndicator').style.color = '#ffaa00';
+                setTimeout(() => {
+                    player.boostActive = false;
+                    document.getElementById('speedIndicator').textContent = 'Normal';
+                    document.getElementById('speedIndicator').style.color = '#00ff88';
+                }, 1500);
+            }
+
+            skillCooldowns[key] = SKILL_COOLDOWN;
+            updateSkillUI();
+        }
+
+        function activateSkill(snake, skillName) {
+            switch(skillName) {
+                case 'Tanah':
+                    for (let i = 1; i <= 3; i++) {
+                        const wx = snake.x + snake.dx * i;
+                        const wy = snake.y + snake.dy * i;
+                        if (wx >= 0 && wx < COLS && wy >= 0 && wy < ROWS) {
+                            walls.push({ x: wx, y: wy, timer: 300 });
+                        }
+                    }
+                    showNotification("🌍 Dinding Tanah!");
+                    break;
+                case 'Api':
+                    const fx = snake.x + snake.dx * 3;
+                    const fy = snake.y + snake.dy * 3;
+                    if (fx >= 0 && fx < COLS && fy >= 0 && fy < ROWS) {
+                        walls.push({ x: fx, y: fy, timer: 100, fire: true });
+                        const targets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                        targets.forEach(t => {
+                            if (Math.abs(t.x - fx) <= 1 && Math.abs(t.y - fy) <= 1) {
+                                killSnake(t);
+                                snake.kills++;
+                                addKillFeed(snake.name, t.name);
+                            }
+                        });
+                    }
+                    showNotification("🔥 Bola Api!");
+                    break;
+                case 'Air':
+                    const waterTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    waterTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 5) {
+                            t.dx = snake.dx; t.dy = snake.dy;
+                            showNotification("💧 Terdorong!");
+                        }
+                    });
+                    break;
+                case 'Listrik':
+                    const elecTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    elecTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 4) {
+                            killSnake(t);
+                            snake.kills++;
+                            addKillFeed(snake.name, t.name);
+                        }
+                    });
+                    showNotification("⚡ Petir!");
+                    break;
+                case 'Racun':
+                    const poisonTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    poisonTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 5) {
+                            t.poisoned = true;
+                            setTimeout(() => {
+                                t.poisoned = false;
+                                if (t.alive) {
+                                    killSnake(t);
+                                    snake.kills++;
+                                    addKillFeed(snake.name, t.name);
+                                }
+                            }, 3000);
+                            showNotification(`☠️ ${t.name} keracunan!`);
+                        }
+                    });
+                    break;
+                case 'Es':
+                    const freezeTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    freezeTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 4) {
+                            t.frozen = true;
+                            setTimeout(() => t.frozen = false, 2000);
+                            showNotification(`❄️ ${t.name} membeku!`);
+                        }
+                    });
+                    break;
+                case 'Bayangan':
+                    snake.invisible = true;
+                    setTimeout(() => snake.invisible = false, 3000);
+                    showNotification("👻 Menghilang!");
+                    break;
+                case 'Kilau':
+                    snake.score += Math.floor(snake.score * 0.5);
+                    showNotification(`✨ Skor +50%!`);
+                    break;
+                case 'Hipnosis':
+                    const hypnoTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    hypnoTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 3) {
+                            t.dx = -t.dx; t.dy = -t.dy;
+                            showNotification(`😵 ${t.name} terhipnosis!`);
+                        }
+                    });
+                    break;
+                case 'Gempa':
+                    const quakeTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    quakeTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 5) {
+                            t.dx = 0; t.dy = 0;
+                            setTimeout(() => {
+                                if (t.alive) {
+                                    killSnake(t);
+                                    snake.kills++;
+                                    addKillFeed(snake.name, t.name);
+                                }
+                            }, 1000);
+                            showNotification(`🌍 ${t.name} lumpuh!`);
+                        }
+                    });
+                    break;
+                case 'Angin':
+                    const windTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    windTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 4) {
+                            t.x += snake.dx * 5;
+                            t.y += snake.dy * 5;
+                            if (t.x < 0) t.x = 0; if (t.x >= COLS) t.x = COLS - 1;
+                            if (t.y < 0) t.y = 0; if (t.y >= ROWS) t.y = ROWS - 1;
+                            showNotification(`💨 ${t.name} terlempar!`);
+                        }
+                    });
+                    break;
+                case 'Baja':
+                    snake.invincible = true;
+                    setTimeout(() => snake.invincible = false, 3000);
+                    showNotification("🛡️ Kebal!");
+                    break;
+                case 'Regen':
+                    snake.length += 5;
+                    for (let i = 0; i < 5; i++) {
+                        snake.body.push({ ...snake.body[snake.body.length - 1] });
+                    }
+                    showNotification(`💚 Panjang +5!`);
+                    break;
+                case 'Refleksi':
+                    snake.invincible = true;
+                    setTimeout(() => snake.invincible = false, 2000);
+                    showNotification("🔮 Memantulkan serangan!");
+                    break;
+                case 'Laser':
+                    for (let i = 1; i <= 5; i++) {
+                        const lx = snake.x + snake.dx * i;
+                        const ly = snake.y + snake.dy * i;
+                        if (lx >= 0 && lx < COLS && ly >= 0 && ly < ROWS) {
+                            const laserTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                            laserTargets.forEach(t => {
+                                if (t.x === lx && t.y === ly) {
+                                    killSnake(t);
+                                    snake.kills++;
+                                    addKillFeed(snake.name, t.name);
+                                }
+                            });
+                            walls.push({ x: lx, y: ly, timer: 50, fire: true });
+                        }
+                    }
+                    showNotification("🔴 Laser!");
+                    break;
+                case 'Akar':
+                    const rootTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    rootTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 3) {
+                            t.frozen = true;
+                            setTimeout(() => t.frozen = false, 3000);
+                            showNotification(`🌿 ${t.name} terjebak akar!`);
+                        }
+                    });
+                    break;
+                case 'Tsunami':
+                    const tsunamiTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    tsunamiTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 6) {
+                            t.x += (t.x - snake.x) * 2;
+                            t.y += (t.y - snake.y) * 2;
+                            if (t.x < 0) t.x = 0; if (t.x >= COLS) t.x = COLS - 1;
+                            if (t.y < 0) t.y = 0; if (t.y >= ROWS) t.y = ROWS - 1;
+                            showNotification(`🌊 ${t.name} tersapu!`);
+                        }
+                    });
+                    break;
+                case 'Lava':
+                    for (let i = 1; i <= 3; i++) {
+                        const lx = snake.x + snake.dx * i;
+                        const ly = snake.y + snake.dy * i;
+                        if (lx >= 0 && lx < COLS && ly >= 0 && ly < ROWS) {
+                            walls.push({ x: lx, y: ly, timer: 400, fire: true });
+                        }
+                    }
+                    showNotification("🌋 Lava!");
+                    break;
+                case 'Petir':
+                    const boltTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    const sortedByDist = boltTargets.sort((a, b) => {
+                        const da = Math.abs(a.x - snake.x) + Math.abs(a.y - snake.y);
+                        const db = Math.abs(b.x - snake.x) + Math.abs(b.y - snake.y);
+                        return da - db;
+                    });
+                    for (let i = 0; i < Math.min(5, sortedByDist.length); i++) {
+                        const t = sortedByDist[i];
+                        killSnake(t);
+                        snake.kills++;
+                        addKillFeed(snake.name, t.name);
+                    }
+                    showNotification("⛈️ Petir menyambar 5 musuh!");
+                    break;
+                case 'Supernova':
+                    const supernovaTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    supernovaTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 6) {
+                            killSnake(t);
+                            snake.kills++;
+                            addKillFeed(snake.name, t.name);
+                        }
+                    });
+                    showNotification("☀️ SUPERNOVA!");
+                    break;
+                case 'Tidur':
+                    const sleepTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    sleepTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 4) {
+                            t.frozen = true;
+                            setTimeout(() => t.frozen = false, 4000);
+                            showNotification(`🌙 ${t.name} tertidur!`);
+                        }
+                    });
+                    break;
+                case 'Meteor':
+                    const meteorTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    for (let i = 0; i < 5; i++) {
+                        const randTarget = meteorTargets[Math.floor(Math.random() * meteorTargets.length)];
+                        if (randTarget) {
+                            killSnake(randTarget);
+                            snake.kills++;
+                            addKillFeed(snake.name, randTarget.name);
+                        }
+                    }
+                    showNotification("☄️ Hujan Meteor!");
+                    break;
+                case 'Lubang Hitam':
+                    const blackHoleTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    blackHoleTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 7) {
+                            t.x = snake.x; t.y = snake.y;
+                            if (!t.invincible) {
+                                killSnake(t);
+                                snake.kills++;
+                                addKillFeed(snake.name, t.name);
+                            }
+                        }
+                    });
+                    showNotification("🌌 Lubang Hitam!");
+                    break;
+                case 'Prism':
+                    for (let d = 0; d < 8; d++) {
+                        const dx = [1,1,0,-1,-1,-1,0,1][d];
+                        const dy = [0,1,1,1,0,-1,-1,-1][d];
+                        for (let i = 1; i <= 3; i++) {
+                            const px = snake.x + dx * i;
+                            const py = snake.y + dy * i;
+                            if (px >= 0 && px < COLS && py >= 0 && py < ROWS) {
+                                const prismTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                                prismTargets.forEach(t => {
+                                    if (t.x === px && t.y === py && !t.invincible) {
+                                        killSnake(t);
+                                        snake.kills++;
+                                        addKillFeed(snake.name, t.name);
+                                    }
+                                });
+                                if (i === 3) walls.push({ x: px, y: py, timer: 100, fire: true });
+                            }
+                        }
+                    }
+                    showNotification("💎 Prism!");
+                    break;
+                case 'Nafas Api':
+                    for (let a = -1; a <= 1; a++) {
+                        for (let i = 1; i <= 4; i++) {
+                            const fx2 = snake.x + snake.dx * i + (a * (i % 2 === 0 ? snake.dy : 0));
+                            const fy2 = snake.y + snake.dy * i + (a * (i % 2 === 0 ? snake.dx : 0));
+                            if (fx2 >= 0 && fx2 < COLS && fy2 >= 0 && fy2 < ROWS) {
+                                walls.push({ x: fx2, y: fy2, timer: 80, fire: true });
+                                const breathTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                                breathTargets.forEach(t => {
+                                    if (t.x === fx2 && t.y === fy2 && !t.invincible) {
+                                        killSnake(t);
+                                        snake.kills++;
+                                        addKillFeed(snake.name, t.name);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    showNotification("🔥 Nafas Api!");
+                    break;
+                case 'Rebirth':
+                    // Already handled in killSnake
+                    break;
+                case 'Ditelan':
+                    const swallowTarget = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    swallowTarget.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 2 && !t.invincible) {
+                            killSnake(t);
+                            snake.kills++;
+                            snake.length += Math.floor(t.length / 2);
+                            addKillFeed(snake.name, t.name);
+                            showNotification(`🌊 ${t.name} ditelan!`);
+                        }
+                    });
+                    break;
+                case 'Hancur':
+                    const destroyTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    destroyTargets.forEach(t => {
+                        const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                        if (dist <= 5 && !t.invincible) {
+                            killSnake(t);
+                            snake.kills++;
+                            addKillFeed(snake.name, t.name);
+                        }
+                    });
+                    showNotification("💥 HANCUR!");
+                    break;
+                case 'Omnipotent':
+                    // Activate all skills for 5 seconds
+                    const allSkills = ['Tanah','Api','Air','Listrik','Racun','Es','Bayangan','Kilau','Hipnosis','Gempa','Angin','Baja','Regen','Refleksi','Laser','Akar','Tsunami','Lava','Petir','Supernova','Tidur','Meteor','Lubang Hitam','Prism','Nafas Api','Ditelan','Hancur'];
+                    allSkills.forEach(s => activateSkill(snake, s));
+                    showNotification("👑 OMNIPOTENT!");
+                    break;
+                case 'Khaos':
+                    const chaosTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+                    chaosTargets.forEach(t => {
+                        t.x = Math.floor(Math.random() * COLS);
+                        t.y = Math.floor(Math.random() * ROWS);
+                        showNotification(`🌀 ${t.name} teracak!`);
+                    });
+                    break;
+                default:
+                    showNotification(`Skill ${skillName} tidak dikenal!`);
+            }
+        }
+
+        function activateAttack(snake) {
+            // Attack skill: bite nearby enemies
+            const attackTargets = [player, ...bots].filter(s => s.alive && s.id !== snake.id);
+            attackTargets.forEach(t => {
+                const dist = Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
+                if (dist <= 3 && !t.invincible) {
+                    killSnake(t);
+                    snake.kills++;
+                    snake.length += Math.floor(t.length / 2);
+                    addKillFeed(snake.name, t.name);
+                    showNotification(`⚔️ ${t.name} digigit!`);
+                }
+            });
+            if (attackTargets.length === 0) showNotification("⚔️ Tidak ada musuh di dekat!");
+        }
+
+        // ==================== UI UPDATES ====================
+        function updatePlayerInfo() {
+            if (!player) return;
+            document.getElementById('scoreDisplay').textContent = player.score;
+            document.getElementById('lengthDisplay').textContent = player.length;
+            document.getElementById('killDisplay').textContent = player.kills;
+            document.getElementById('playerAvatar').textContent = player.emoji;
+            document.getElementById('coinDisplay').textContent = Math.floor(playerCoins);
+        }
+
+        function updateActiveSnakeInfo() {
+            const snakeType = SNAKE_TYPES[selectedSnakeId];
+            document.getElementById('activeSnakeEmoji').textContent = snakeType.emoji;
+            document.getElementById('activeSnakeName').textContent = snakeType.name;
+            document.getElementById('activeSnakeSkill').textContent = `Skill: ${snakeType.skill} - ${snakeType.skillDesc}`;
+            document.getElementById('skillQIcon').textContent = snakeType.skillIcon;
+        }
+
+        function updateSkillUI() {
+            ['Q', 'E', 'SPACE'].forEach(key => {
+                const cd = skillCooldowns[key] || 0;
+                const btn = document.getElementById(`skill${key === 'SPACE' ? 'Space' : key}`);
+                const cdOverlay = document.getElementById(`skill${key === 'SPACE' ? 'Space' : key}CD`);
+                if (cd > 0) {
+                    btn.classList.add('cooldown');
+                    const progress = (cd / SKILL_COOLDOWN) * 100;
+                    cdOverlay.style.height = `${progress}%`;
+                } else {
+                    btn.classList.remove('cooldown');
+                    cdOverlay.style.height = '0%';
+                }
+            });
+        }
+
+        function updateSkillCooldowns() {
+            let updated = false;
+            ['Q', 'E', 'SPACE'].forEach(key => {
+                if (skillCooldowns[key] > 0) {
+                    skillCooldowns[key] -= 80;
+                    if (skillCooldowns[key] < 0) skillCooldowns[key] = 0;
+                    updated = true;
+                }
+            });
+            if (updated) updateSkillUI();
+        }
+
+        function renderShop() {
+            const shop = document.getElementById('snakeShop');
+            shop.innerHTML = '';
+            SNAKE_TYPES.forEach(snake => {
+                const card = document.createElement('div');
+                card.className = `snake-card ${snake.owned ? 'owned' : 'locked'} ${selectedSnakeId === snake.id ? 'selected' : ''}`;
+                card.innerHTML = `
+                    <div class="snake-preview">${snake.emoji}</div>
+                    <div class="snake-info">
+                        <div class="snake-name">${snake.name}</div>
+                        <div class="snake-skill">${snake.skillIcon} ${snake.skill} - ${snake.skillDesc}</div>
+                    </div>
+                    <div class="snake-price">${snake.owned ? '✅' : `🪙${snake.price}`}</div>
+                    ${snake.owned ? '<div class="owned-badge">OWNED</div>' : ''}
+                `;
+                if (!snake.owned) {
+                    card.addEventListener('click', () => buySnake(snake.id));
+                } else {
+                    card.addEventListener('click', () => selectSnake(snake.id));
+                }
+                shop.appendChild(card);
+            });
+        }
+
+        function buySnake(id) {
+            const snake = SNAKE_TYPES[id];
+            if (snake.owned) return;
+            if (playerCoins >= snake.price) {
+                playerCoins -= snake.price;
+                snake.owned = true;
+                selectedSnakeId = id;
+                document.getElementById('coinDisplay').textContent = Math.floor(playerCoins);
+                showNotification(`✅ ${snake.name} berhasil dibeli!`);
+                renderShop();
+                updateActiveSnakeInfo();
+                // Update player if game is running
+                if (player) {
+                    player.color = snake.color;
+                    player.emoji = snake.emoji;
+                    player.skill = snake.skill;
+                    player.skillIcon = snake.skillIcon;
+                    document.getElementById('playerAvatar').textContent = player.emoji;
+                }
+                saveGameData();
+            } else {
+                showNotification(`❌ Koin tidak cukup! Butuh ${snake.price} 🪙`);
+            }
+        }
+
+        function selectSnake(id) {
+            const snake = SNAKE_TYPES[id];
+            if (!snake.owned) return;
+            selectedSnakeId = id;
+            renderShop();
+            updateActiveSnakeInfo();
+            if (player) {
+                player.color = snake.color;
+                player.emoji = snake.emoji;
+                player.skill = snake.skill;
+                player.skillIcon = snake.skillIcon;
+                document.getElementById('playerAvatar').textContent = player.emoji;
+            }
+            showNotification(`🐍 ${snake.name} dipilih!`);
+            saveGameData();
+        }
+
+        // ==================== KILL FEED ====================
+        function addKillFeed(killer, victim) {
+            const feed = document.getElementById('killFeed');
+            const msg = document.createElement('div');
+            msg.className = 'kill-msg';
+            msg.textContent = `💀 ${killer} ➔ ${victim}`;
+            feed.appendChild(msg);
+            setTimeout(() => msg.remove(), 5000);
+            if (feed.children.length > 5) feed.firstChild.remove();
+        }
+
+        // ==================== NOTIFICATION ====================
+        function showNotification(text) {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.textContent = text;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        // ==================== GAME OVER ====================
+        function endGame() {
+            if (!gameRunning) return;
+            gameRunning = false;
+            clearInterval(gameLoop);
+            clearInterval(foodSpawnInterval);
+            clearInterval(gameTimeInterval);
+            
+            const allSnakes = [player, ...bots].filter(s => s.alive);
+            const rank = allSnakes.findIndex(s => s.isPlayer) + 1;
+            document.getElementById('finalScore').textContent = player ? player.score : 0;
+            document.getElementById('finalRank').textContent = rank || '-';
+            document.getElementById('finalKills').textContent = player ? player.kills : 0;
+            document.getElementById('finalTime').textContent = formatTime(gameTime);
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        function restartGame() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('killFeed').innerHTML = '';
+            initGame(document.getElementById('displayName').textContent);
+        }
+
+        function backToMenu() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('gameUI').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('loginScreen').style.opacity = '1';
+            gameRunning = false;
+            clearInterval(gameLoop);
+            clearInterval(foodSpawnInterval);
+            clearInterval(gameTimeInterval);
+        }
+
+        function quitGame() {
+            if (confirm('Yakin ingin keluar dari permainan?')) {
+                backToMenu();
+            }
+        }
+
+        // ==================== SETTINGS ====================
+        function toggleSettings() {
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function toggleSetting(el) {
+            el.classList.toggle('active');
+            const id = el.id;
+            if (id === 'soundToggle') settings.sound = el.classList.contains('active');
+            else if (id === 'musicToggle') settings.music = el.classList.contains('active');
+            else if (id === 'particleToggle') settings.particles = el.classList.contains('active');
+            else if (id === 'nameToggle') settings.showNames = el.classList.contains('active');
+            else if (id === 'darkToggle') settings.darkMode = el.classList.contains('active');
+            saveGameData();
+        }
+
+        // ==================== KEYBOARD CONTROLS ====================
+        function handleKeyDown(e) {
+            if (!player || !player.alive || !gameRunning) return;
+            
+            const key = e.key;
+            let dx = 0, dy = 0;
+            
+            if (key === 'w' || key === 'ArrowUp') { dx = 0; dy = -1; e.preventDefault(); }
+            else if (key === 's' || key === 'ArrowDown') { dx = 0; dy = 1; e.preventDefault(); }
+            else if (key === 'a' || key === 'ArrowLeft') { dx = -1; dy = 0; e.preventDefault(); }
+            else if (key === 'd' || key === 'ArrowRight') { dx = 1; dy = 0; e.preventDefault(); }
+            else if (key === 'q' || key === 'Q') { useSkill('Q'); e.preventDefault(); return; }
+            else if (key === 'e' || key === 'E') { useSkill('E'); e.preventDefault(); return; }
+            else if (key === ' ' || key === 'Space') { useSkill('SPACE'); e.preventDefault(); return; }
+            else if (key === 'm' || key === 'M') {
+                const minimap = document.getElementById('minimap');
+                minimap.style.display = minimap.style.display === 'none' ? 'block' : 'none';
+                e.preventDefault();
+                return;
+            }
+            
+            if (dx !== 0 || dy !== 0) {
+                // Prevent reverse direction
+                if (!(dx === -player.dx && dy === -player.dy)) {
+                    player.directionQueue.push({ dx, dy });
+                    if (player.directionQueue.length > 3) player.directionQueue.shift();
+                }
+            }
+        }
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // ==================== SAVE/LOAD ====================
+        function saveGameData() {
+            try {
+                const data = {
+                    coins: playerCoins,
+                    snakes: SNAKE_TYPES.map(s => ({ id: s.id, owned: s.owned })),
+                    selected: selectedSnakeId,
+                    settings: settings
+                };
+                localStorage.setItem('snakeArenaData', JSON.stringify(data));
+            } catch (e) {}
+        }
+
+        function loadGameData() {
+            try {
+                const raw = localStorage.getItem('snakeArenaData');
+                if (!raw) return;
+                const data = JSON.parse(raw);
+                if (data.coins !== undefined) playerCoins = data.coins;
+                if (data.snakes) {
+                    data.snakes.forEach(saved => {
+                        const snake = SNAKE_TYPES.find(s => s.id === saved.id);
+                        if (snake) snake.owned = saved.owned;
+                    });
+                }
+                if (data.selected !== undefined) selectedSnakeId = data.selected;
+                if (data.settings) {
+                    Object.assign(settings, data.settings);
+                    // Update toggle switches
+                    document.querySelectorAll('.toggle-switch').forEach(el => {
+                        const id = el.id;
+                        if (id === 'soundToggle' && !settings.sound) el.classList.remove('active');
+                        else if (id === 'musicToggle' && !settings.music) el.classList.remove('active');
+                        else if (id === 'particleToggle' && !settings.particles) el.classList.remove('active');
+                        else if (id === 'nameToggle' && !settings.showNames) el.classList.remove('active');
+                        else if (id === 'darkToggle' && !settings.darkMode) el.classList.remove('active');
+                    });
+                }
+            } catch (e) {}
+        }
+
+        // ==================== INIT ====================
+        window.onload = function() {
+            init();
+            document.getElementById('playerName').value = 'LO';
+        };
+    </script>
+</body>
+</html>
